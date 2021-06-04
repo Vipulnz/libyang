@@ -7490,7 +7490,7 @@ yyreduce:
         }
         length = strlen((yyvsp[-2].str));
         if (!substmt->ext_modules) {
-          array = malloc(2 * sizeof *substmt->ext_modules);
+          array = calloc(2, sizeof *substmt->ext_modules);
         } else {
           for (i = 0; substmt->ext_modules[i]; ++i);
           array = realloc(substmt->ext_modules, (i + 2) * sizeof *substmt->ext_modules);

@@ -1069,7 +1069,7 @@ lys_parse_mem_(struct ly_ctx *ctx, const char *data, LYS_INFORMAT format, const 
     if (!internal && format == LYS_IN_YANG) {
         /* enlarge data by 2 bytes for flex */
         len = strlen(data);
-        enlarged_data = malloc((len + 2) * sizeof *enlarged_data);
+        enlarged_data = calloc((len + 2), sizeof *enlarged_data);
         LY_CHECK_ERR_RETURN(!enlarged_data, LOGMEM(ctx), NULL);
         memcpy(enlarged_data, data, len);
         enlarged_data[len] = enlarged_data[len + 1] = '\0';
@@ -1126,7 +1126,7 @@ lys_sub_parse_mem(struct lys_module *module, const char *data, LYS_INFORMAT form
     if (format == LYS_IN_YANG) {
         /* enlarge data by 2 bytes for flex */
         len = strlen(data);
-        enlarged_data = malloc((len + 2) * sizeof *enlarged_data);
+        enlarged_data = calloc((len + 2), sizeof *enlarged_data);
         LY_CHECK_ERR_RETURN(!enlarged_data, LOGMEM(module->ctx), NULL);
         memcpy(enlarged_data, data, len);
         enlarged_data[len] = enlarged_data[len + 1] = '\0';
@@ -1564,7 +1564,7 @@ lys_ext_dup(struct ly_ctx *ctx, struct lys_module *mod, struct lys_ext_instance 
             /* resolved extension instance, just duplicate it */
             switch(orig[u]->ext_type) {
             case LYEXT_FLAG:
-                result[u] = malloc(sizeof(struct lys_ext_instance));
+                result[u] = calloc(1, sizeof(struct lys_ext_instance));
                 LY_CHECK_ERR_GOTO(!result[u], LOGMEM(ctx), error);
                 break;
             case LYEXT_COMPLEX:
@@ -1611,7 +1611,7 @@ lys_ext_dup(struct ly_ctx *ctx, struct lys_module *mod, struct lys_ext_instance 
                 goto error;
             }
             info_orig = unres->str_snode[i];
-            info = malloc(sizeof *info);
+            info = calloc(1, sizeof *info);
             LY_CHECK_ERR_GOTO(!info, LOGMEM(ctx), error);
             info->datatype = info_orig->datatype;
             if (info->datatype == LYS_IN_YIN) {
@@ -1768,7 +1768,7 @@ type_dup(struct lys_module *mod, struct lys_node *parent, struct lys_type *new, 
     case LY_TYPE_IDENT:
         new->info.ident.count = old->info.ident.count;
         if (old->info.ident.count) {
-            new->info.ident.ref = malloc(old->info.ident.count * sizeof *new->info.ident.ref);
+            new->info.ident.ref = calloc(old->info.ident.count, sizeof *new->info.ident.ref);
             LY_CHECK_ERR_RETURN(!new->info.ident.ref, LOGMEM(mod->ctx), -1);
             memcpy(new->info.ident.ref, old->info.ident.ref, old->info.ident.count * sizeof *new->info.ident.ref);
         } else {
@@ -1822,7 +1822,7 @@ type_dup(struct lys_module *mod, struct lys_node *parent, struct lys_type *new, 
             new->info.str.pat_count = old->info.str.pat_count;
 #ifdef LY_ENABLED_CACHE
             if (!in_grp) {
-                new->info.str.patterns_pcre = malloc(new->info.str.pat_count * 2 * sizeof *new->info.str.patterns_pcre);
+                new->info.str.patterns_pcre = calloc(new->info.str.pat_count * 2, sizeof *new->info.str.patterns_pcre);
                 LY_CHECK_ERR_RETURN(!new->info.str.patterns_pcre, LOGMEM(mod->ctx), -1);
                 for (u = 0; u < new->info.str.pat_count; u++) {
                     if (lyp_precompile_pattern(mod->ctx, &new->info.str.patterns[u].expr[1],
@@ -3192,7 +3192,7 @@ lys_node_dup_recursion(struct lys_module *module, struct lys_node *parent, const
 
                 /* duplicate compiled expression */
                 size = (size1 / 4) + ((size1 % 4) ? 1 : 0);
-                retval->iffeature[i].expr = malloc(size * sizeof *retval->iffeature[i].expr);
+                retval->iffeature[i].expr = calloc(size, sizeof *retval->iffeature[i].expr);
                 LY_CHECK_ERR_GOTO(!retval->iffeature[i].expr, LOGMEM(ctx), error);
                 memcpy(retval->iffeature[i].expr, node->iffeature[i].expr, size * sizeof *retval->iffeature[i].expr);
 
@@ -3385,7 +3385,7 @@ lys_node_dup_recursion(struct lys_module *module, struct lys_node *parent, const
         }
 
         if (llist_orig->dflt) {
-            llist->dflt = malloc(llist_orig->dflt_size * sizeof *llist->dflt);
+            llist->dflt = calloc(llist_orig->dflt_size, sizeof *llist->dflt);
             LY_CHECK_ERR_GOTO(!llist->dflt, LOGMEM(ctx), error);
             llist->dflt_size = llist_orig->dflt_size;
 
@@ -3428,19 +3428,19 @@ lys_node_dup_recursion(struct lys_module *module, struct lys_node *parent, const
         }
 
         if (list_orig->unique) {
-            list->unique = malloc(list_orig->unique_size * sizeof *list->unique);
+            list->unique = calloc(list_orig->unique_size, sizeof *list->unique);
             LY_CHECK_ERR_GOTO(!list->unique, LOGMEM(ctx), error);
             list->unique_size = list_orig->unique_size;
 
             for (i = 0; i < list->unique_size; ++i) {
-                list->unique[i].expr = malloc(list_orig->unique[i].expr_size * sizeof *list->unique[i].expr);
+                list->unique[i].expr = calloc(list_orig->unique[i].expr_size, sizeof *list->unique[i].expr);
                 LY_CHECK_ERR_GOTO(!list->unique[i].expr, LOGMEM(ctx), error);
                 list->unique[i].expr_size = list_orig->unique[i].expr_size;
                 for (j = 0; j < list->unique[i].expr_size; j++) {
                     list->unique[i].expr[j] = lydict_insert(ctx, list_orig->unique[i].expr[j], 0);
 
                     /* if it stays in unres list, duplicate it also there */
-                    unique_info = malloc(sizeof *unique_info);
+                    unique_info = calloc(1, sizeof *unique_info);
                     LY_CHECK_ERR_GOTO(!unique_info, LOGMEM(ctx), error);
                     unique_info->list = (struct lys_node *)list;
                     unique_info->expr = list->unique[i].expr[j];
@@ -4095,11 +4095,11 @@ lys_features_list(const struct lys_module *module, uint8_t **states)
     for (i = 0; i < module->inc_size; i++) {
         count += module->inc[i].submodule->features_size;
     }
-    result = malloc((count + 1) * sizeof *result);
+    result = calloc((count + 1), sizeof *result);
     LY_CHECK_ERR_RETURN(!result, LOGMEM(module->ctx), NULL);
 
     if (states) {
-        *states = malloc((count + 1) * sizeof **states);
+        *states = calloc((count + 1), sizeof **states);
         LY_CHECK_ERR_RETURN(!(*states), LOGMEM(module->ctx); free(result), NULL);
     }
     count = 0;
