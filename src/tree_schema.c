@@ -5454,20 +5454,25 @@ lys_extension_instances_free(struct ly_ctx *ctx, struct lys_ext_instance **e, un
             /* no free, this is just a shadow copy of the original extension instance */
         } else {
             if (e[i]->flags & (LYEXT_OPT_YANG)) {
-                free(e[i]->def);     /* remove name of instance extension */
-                e[i]->def = NULL;
+                if (e[i]->def) {
+                    free(e[i]->def);     /* remove name of instance extension */
+                    e[i]->def = NULL;
+                }
                 yang_free_ext_data((struct yang_ext_substmt *)e[i]->parent); /* remove backup part of yang file */
             }
             /* remove private object */
             if (e[i]->priv && private_destructor) {
                 private_destructor((struct lys_node*)e[i], e[i]->priv);
             }
-            lys_extension_instances_free(ctx, e[i]->ext, e[i]->ext_size, private_destructor);
+            if (e[i]->ext && e[i]->ext_size) {
+                lys_extension_instances_free(ctx, e[i]->ext, e[i]->ext_size, private_destructor);
+            }
             lydict_remove(ctx, e[i]->arg_value);
         }
 
-        if (e[i]->def && e[i]->def->plugin && e[i]->def->plugin->type == LYEXT_COMPLEX
-                && ((e[i]->flags & LYEXT_OPT_CONTENT) == 0)) {
+        if (e[i] && e[i]->def && e[i]->def->plugin && e[i]->def->plugin->type == LYEXT_COMPLEX
+                && ((e[i]->flags & LYEXT_OPT_CONTENT) == 0))
+        {
             substmt = ((struct lys_ext_instance_complex *)e[i])->substmt;
             for (j = 0; substmt[j].stmt; j++) {
                 switch(substmt[j].stmt) {
