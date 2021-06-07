@@ -5422,7 +5422,8 @@ void
 lys_extension_instances_free(struct ly_ctx *ctx, struct lys_ext_instance **e, unsigned int size,
                              void (*private_destructor)(const struct lys_node *node, void *priv))
 {
-    unsigned int i, j, k;
+    int i;
+    unsigned int j, k;
     struct lyext_substmt *substmt;
     void **pp, **start;
     struct lys_node *siter, *snext;
@@ -5445,7 +5446,7 @@ lys_extension_instances_free(struct ly_ctx *ctx, struct lys_ext_instance **e, un
         return;
     }
 
-    for (i = 0; i < size; i++) {
+    for (i = size-1; i >= 0; i--) {
         if (!e[i]) {
             continue;
         }
